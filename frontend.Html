@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Lot App</title>
+</head>
+<body>
+    <h1>Parking Lot App</h1>
+
+    <form id="car-form" enctype="multipart/form-data">
+        <label for="license-plate">License Plate:</label>
+        <input type="text" id="license-plate" name="license-plate">
+        <label for="color">Color:</label>
+        <input type="text" id="color" name="color">
+        <label for="car-photo">Car Photo:</label>
+        <input type="file" id="car-photo" name="car-photo">
+        <button type="button" onclick="registerCar()">Register Car</button>
+        <button type="button" onclick="withdrawCar()">Withdraw Car</button>
+    </form>
+
+    <div id="car-list"></div>
+
+    <script>
+        async function registerCar() {
+            const licensePlate = document.getElementById('license-plate').value;
+            const color = document.getElementById('color').value;
+            const photo = document.getElementById('car-photo').files[0];
+
+            const formData = new FormData();
+            formData.append('license_plate', licensePlate);
+            formData.append('color', color);
+            formData.append('car_photo', photo);
+
+            const response = await fetch('http://localhost:5000/cars', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                alert('Car registered successfully');
+                document.getElementById('car-form').reset();
+                listCars();
+            } else {
+                alert('Failed to register car');
+            }
+        }
+
+        async function withdrawCar() {
+            const licensePlate = document.getElementById('license-plate').value;
+            const response = await fetch('http://localhost:5000/cars', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ license_plate: licensePlate })
+            });
+            if (response.ok) {
+                alert('Car withdrawn successfully');
+                listCars();
+            } else {
+                alert('Failed to withdraw car');
+            }
+        }
+
+        async function listCars() {
+            const response = await fetch('http://localhost:5000/cars');
+            const cars = await response.json();
+            const carList = document.getElementById('car-list');
+            carList.innerHTML = '<h2>Registered Cars</h2>';
+            cars.forEach(car => {
+                const carInfo = document.createElement('p');
+                carInfo.textContent = `License Plate: ${car.license_plate}, Color: ${car.color}, Entry Time: ${car.entry_time}`;
+                carList.appendChild(carInfo);
+            });
+        }
+
+        listCars();
+    </script>
+</body>
+</html>
+
